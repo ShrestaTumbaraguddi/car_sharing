@@ -51,6 +51,21 @@ input{
     font-size:16px;
 }
 
+.checkbox-label{
+    display:flex;
+    align-items:center;
+    gap:10px;
+}
+
+.checkbox-label input[type="checkbox"]{
+    width:22px;
+    height:22px;
+    margin:0;
+    padding:0;
+    accent-color:#ef7c00;
+    flex:0 0 auto;
+}
+
 button{
     width:100%;
     margin-top:25px;
@@ -101,7 +116,7 @@ button:hover{
 <label>End</label>
 <input type="datetime-local" id="end">
 
-<label>
+<label class="checkbox-label">
 <input type="checkbox" id="manualKm" checked>
 Enter kilometers manually
 </label>
