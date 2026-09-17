@@ -94,6 +94,18 @@ button:hover{
     margin-top:10px;
 }
 
+.price-details{
+    margin-top:15px;
+    border-top:1px solid #ddd;
+    padding-top:12px;
+}
+
+.price-details summary{
+    color:#ef7c00;
+    cursor:pointer;
+    font-weight:600;
+}
+
 .total{
     font-size:28px;
     color:#ef7c00;
@@ -148,6 +160,9 @@ Calculate Cost
 const DAY_RATE = 1.40;
 const NIGHT_RATE = 0.72;
 const DAILY_CAP = 19.00;
+const DISTANCE_RATE_FIRST = 0.38;
+const DISTANCE_RATE_AFTER = 0.33;
+const DISTANCE_THRESHOLD = 150;
 document.getElementById("manualKm").addEventListener("change", function(){
 
     const manual = this.checked;
@@ -232,12 +247,12 @@ function calculateCosts(){
 
     let distanceCost = 0;
 
-    if(km <= 150){
-        distanceCost = km * 0.38;
+    if(km <= DISTANCE_THRESHOLD){
+        distanceCost = km * DISTANCE_RATE_FIRST;
     }else{
         distanceCost =
-            (150 * 0.38) +
-            ((km - 150) * 0.33);
+            (DISTANCE_THRESHOLD * DISTANCE_RATE_FIRST) +
+            ((km - DISTANCE_THRESHOLD) * DISTANCE_RATE_AFTER);
     }
 
     const total =
@@ -283,6 +298,15 @@ function calculateCosts(){
         Distance Cost:
         €${distanceCost.toFixed(2)}
         </p>
+
+        <details class="price-details">
+            <summary>Show price details</summary>
+            <p>Day rate (08:00-20:00): €${DAY_RATE.toFixed(2)} per hour</p>
+            <p>Night rate (20:00-08:00): €${NIGHT_RATE.toFixed(2)} per hour</p>
+            <p>Daily time cap: €${DAILY_CAP.toFixed(2)} per 24-hour block</p>
+            <p>Distance rate up to ${DISTANCE_THRESHOLD} km: €${DISTANCE_RATE_FIRST.toFixed(2)} per km</p>
+            <p>Distance rate after ${DISTANCE_THRESHOLD} km: €${DISTANCE_RATE_AFTER.toFixed(2)} per km</p>
+        </details>
 
         <hr>
 
