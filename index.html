@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Carsharing Kaufbeuren Calculator</title>
+
+<style>
+*{
+    box-sizing:border-box;
+}
+
+body{
+    margin:0;
+    font-family:'Segoe UI',sans-serif;
+    background:#f4f6f8;
+    color:#333;
+}
+
+.container{
+    max-width:800px;
+    margin:40px auto;
+    padding:20px;
+}
+
+.card{
+    background:white;
+    padding:25px;
+    border-radius:16px;
+    box-shadow:0 4px 15px rgba(0,0,0,0.08);
+}
+
+h1{
+    text-align:center;
+    color:#ef7c00;
+}
+
+label{
+    display:block;
+    margin-top:15px;
+    margin-bottom:6px;
+    font-weight:600;
+}
+
+input{
+    width:100%;
+    padding:12px;
+    border:1px solid #ddd;
+    border-radius:8px;
+    font-size:16px;
+}
+
+button{
+    width:100%;
+    margin-top:25px;
+    padding:14px;
+    border:none;
+    border-radius:10px;
+    background:#ef7c00;
+    color:white;
+    font-size:16px;
+    font-weight:bold;
+    cursor:pointer;
+}
+
+button:hover{
+    background:#d96f00;
+}
+
+.result{
+    margin-top:25px;
+}
+
+.summary{
+    background:#fafafa;
+    border-radius:10px;
+    padding:15px;
+    margin-top:10px;
+}
+
+.total{
+    font-size:28px;
+    color:#ef7c00;
+    font-weight:bold;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="card">
+
+<h1>🚗 Carsharing Kaufbeuren</h1>
+
+<label>Start</label>
+<input type="datetime-local" id="start">
+
+<label>End</label>
+<input type="datetime-local" id="end">
+
+<label>
+<input type="checkbox" id="manualKm" checked>
+Enter kilometers manually
+</label>
+
+<div id="manualKmSection">
+    <label>Kilometers travelled</label>
+    <input type="number" id="km" value="0">
+</div>
+
+<div id="odometerSection" style="display:none;">
+    <label>Start Odometer (km)</label>
+    <input type="number" id="startOdo">
+
+    <label>End Odometer (km)</label>
+    <input type="number" id="endOdo">
+</div>
+
+<button onclick="calculateCosts()">
+Calculate Cost
+</button>
+
+<div id="output" class="result"></div>
+
+</div>
+</div>
+
+<script>
+
+const DAY_RATE = 1.40;
+const NIGHT_RATE = 0.72;
+const DAILY_CAP = 19.00;
+document.getElementById("manualKm").addEventListener("change", function(){
+
+    const manual = this.checked;
+
+    document.getElementById("manualKmSection").style.display =
+        manual ? "block" : "none";
+
+    document.getElementById("odometerSection").style.display =
+        manual ? "none" : "block";
+});
+function calculateCosts(){
+
+    const start = new Date(document.getElementById("start").value);
+    const end = new Date(document.getElementById("end").value);
+    let km;
+
+    if(document.getElementById("manualKm").checked){
+
+        km = parseFloat(document.getElementById("km").value || 0);
+
+    } else {
+
+        const startOdo =
+            parseFloat(document.getElementById("startOdo").value);
+
+        const endOdo =
+            parseFloat(document.getElementById("endOdo").value);
+
+        km = endOdo - startOdo;
+
+        if(km < 0){
+            alert("End odometer must be greater than start odometer.");
+            return;
+        }
+    }
+
+    if(end <= start){
+        alert("End time must be after start time");
+        return;
+    }
+
+    let current = new Date(start);
+
+    let dayHours = 0;
+    let nightHours = 0;
+
+    while(current < end){
+
+        let next = new Date(current);
+        next.setMinutes(next.getMinutes()+1);
+
+        if(next > end){
+            next = end;
+        }
+
+        const hour = current.getHours();
+
+        const diffHours =
+            (next-current)/(1000*60*60);
+
+        if(hour >= 8 && hour < 20){
+            dayHours += diffHours;
+        }else{
+            nightHours += diffHours;
+        }
+
+        current = next;
+    }
+
+    const rawTimeCost =
+        (dayHours*DAY_RATE) +
+        (nightHours*NIGHT_RATE);
+
+    const totalHours =
+        (end-start)/(1000*60*60);
+
+    const dayBlocks =
+        Math.ceil(totalHours/24);
+
+    const cappedTimeCost =
+        Math.min(rawTimeCost, dayBlocks*DAILY_CAP);
+
+    let distanceCost = 0;
+
+    if(km <= 150){
+        distanceCost = km * 0.38;
+    }else{
+        distanceCost =
+            (150 * 0.38) +
+            ((km - 150) * 0.33);
+    }
+
+    const total =
+        cappedTimeCost +
+        distanceCost;
+
+    document.getElementById("output").innerHTML =
+    `
+    <div class="summary">
+
+        <h3>Usage Summary</h3>
+
+        <p><strong>Total Duration:</strong>
+        ${totalHours.toFixed(2)} hours</p>
+
+        <p><strong>Day Hours:</strong>
+        ${dayHours.toFixed(2)} h</p>
+
+        <p><strong>Night Hours:</strong>
+        ${nightHours.toFixed(2)} h</p>
+
+        <hr>
+
+        <p>
+        Time Cost (before cap):
+        €${rawTimeCost.toFixed(2)}
+        </p>
+
+        <p>
+        Daily Cap Applied:
+        €${(dayBlocks*DAILY_CAP).toFixed(2)}
+        </p>
+
+        <p>
+        Final Time Cost:
+        €${cappedTimeCost.toFixed(2)}
+        </p>
+
+        <p>
+        Distance Cost:
+        €${distanceCost.toFixed(2)}
+        </p>
+
+        <hr>
+
+        <div class="total">
+        Total €${total.toFixed(2)}
+        </div>
+
+    </div>
+    `;
+}
+
+</script>
+
+</body>
+</html>
